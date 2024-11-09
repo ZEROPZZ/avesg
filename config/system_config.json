@@ -1,0 +1,21 @@
+{
+    "api": {
+        "host": "0.0.0.0",
+        "port": 8000,
+        "debug": false
+    },
+    "memory": {
+        "max_short_term": 100,
+        "max_long_term": 1000,
+        "consolidation_threshold": 0.7
+    },
+    "learning": {
+        "learning_rate": 0.01,
+        "batch_size": 32,
+        "epochs": 10
+    },
+    "language": {
+        "default_language": "zh-CN",
+        "confidence_threshold": 0.6
+    }
+} 

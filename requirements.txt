@@ -1,0 +1,9 @@
+ numpy
+requests
+spacy
+transformers
+SpeechRecognition
+pyttsx3
+PyPDF2
+
+
