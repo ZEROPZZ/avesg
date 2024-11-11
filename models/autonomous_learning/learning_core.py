@@ -1,143 +1,45 @@
-import numpy as np # type: ignore
 import tensorflow as tf # type: ignore
-from typing import Dict, List, Tuple, Optional
-import logging
-import json
-import os
-from datetime import datetime
+import numpy as np # type: ignore
+from typing import Optional, Dict, List, Tuple
 
 class AutonomousLearner:
-    def __init__(self):
-        self.logger = self._setup_logger()
-        self.knowledge_base = {}
-        self.learning_history = []
-        self.model = self._build_model()
-        self.current_state = None
+    def __init__(self, config: Optional[Dict] = None):
+        self.config = config or {}
+        self._build_model()
+        self.loss_fn = tf.compat.v1.losses.sparse_softmax_cross_entropy
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
         
-        # 加载已有知识库
-        self._load_knowledge_base()
-        
-    def _setup_logger(self) -> logging.Logger:
-        """设置日志系统"""
-        logger = logging.getLogger('autonomous_learner')
-        logger.setLevel(logging.DEBUG)
-        
-        handler = logging.FileHandler('logs/autonomous_learner.log')
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        
-        return logger
-        
-    def _build_model(self) -> tf.keras.Model:
-        """构建神经网络模型"""
-        model = tf.keras.Sequential([
-            tf.keras.layers.Dense(128, activation='relu', input_shape=(100,)),
-            tf.keras.layers.Dropout(0.2),
+    def _build_model(self):
+        self.model = tf.keras.Sequential([
             tf.keras.layers.Dense(64, activation='relu'),
-            tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Dense(32, activation='relu'),
-            tf.keras.layers.Dense(10, activation='softmax')
+            tf.keras.layers.Dense(4, activation='softmax')
         ])
         
-        model.compile(
-            optimizer='adam',
-            loss='categorical_crossentropy',
-            metrics=['accuracy']
-        )
+    def predict_action(self, state: np.ndarray) -> int:
+        if state.ndim == 1:
+            state = state[np.newaxis, ...]
+        logits = self.model(state)
+        return np.argmax(logits.numpy())
         
-        return model
+    def train_on_batch(self, experiences: List[Tuple]):
+        """批量训练"""
+        states = np.array([exp[0] for exp in experiences])
+        actions = np.array([exp[1] for exp in experiences])
+        rewards = np.array([exp[2] for exp in experiences])
+        next_states = np.array([exp[3] for exp in experiences])
         
-    def _load_knowledge_base(self):
-        """加载知识库"""
-        try:
-            if os.path.exists('data/knowledge_base.json'):
-                with open('data/knowledge_base.json', 'r', encoding='utf-8') as f:
-                    self.knowledge_base = json.load(f)
-                self.logger.info("Knowledge base loaded successfully")
-        except Exception as e:
-            self.logger.error(f"Failed to load knowledge base: {str(e)}")
+        with tf.GradientTape() as tape:
+            logits = self.model(states)
+            # 计算每个样本的损失
+            losses = self.loss_fn(actions, logits)
+            # 应用奖励权重并计算平均损失
+            weighted_losses = losses * tf.cast(rewards, tf.float32)
+            loss = tf.reduce_mean(weighted_losses)  # 添加这行，计算平均损失
             
-    def _save_knowledge_base(self):
-        """保存知识库"""
-        try:
-            with open('data/knowledge_base.json', 'w', encoding='utf-8') as f:
-                json.dump(self.knowledge_base, f, indent=4, ensure_ascii=False)
-            self.logger.info("Knowledge base saved successfully")
-        except Exception as e:
-            self.logger.error(f"Failed to save knowledge base: {str(e)}")
-            
-    def learn_from_interaction(self, input_data: Dict, feedback: Optional[float] = None):
-        """从交互中学习"""
-        try:
-            # 处理输入数据
-            processed_data = self._preprocess_data(input_data)
-            
-            # 更新知识库
-            self._update_knowledge_base(processed_data, feedback)
-            
-            # 训练模型
-            if feedback is not None:
-                self._train_model(processed_data, feedback)
-                
-            # 记录学习历史
-            self.learning_history.append({
-                'timestamp': datetime.now().isoformat(),
-                'input_data': input_data,
-                'feedback': feedback
-            })
-            
-            self.logger.info("Successfully learned from interaction")
-            
-        except Exception as e:
-            self.logger.error(f"Learning from interaction failed: {str(e)}")
-            
-    def _preprocess_data(self, input_data: Dict) -> np.ndarray:
-        """预处理输入数据"""
-        # 实现数据预处理逻辑
-        return np.array([])
+        # 计算梯度并应用
+        grads = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
         
-    def _update_knowledge_base(self, data: np.ndarray, feedback: Optional[float]):
-        """更新知识库"""
-        # 实现知识库更新逻辑
-        pass
-        
-    def _train_model(self, data: np.ndarray, feedback: float):
-        """训练模型"""
-        try:
-            # 准备训练数据
-            X = np.expand_dims(data, axis=0)
-            y = np.array([[feedback]])
-            
-            # 训练模型
-            self.model.fit(X, y, epochs=1, verbose=0)
-            
-            self.logger.info("Model training successful")
-            
-        except Exception as e:
-            self.logger.error(f"Model training failed: {str(e)}")
-            
-    def get_prediction(self, input_data: Dict) -> Dict:
-        """获取预测结果"""
-        try:
-            processed_data = self._preprocess_data(input_data)
-            prediction = self.model.predict(np.expand_dims(processed_data, axis=0))
-            
-            return {
-                'prediction': prediction.tolist(),
-                'confidence': float(np.max(prediction))
-            }
-            
-        except Exception as e:
-            self.logger.error(f"Prediction failed: {str(e)}")
-            return {'error': str(e)}
-            
-    def get_learning_status(self) -> Dict:
-        """获取学习状态"""
-        return {
-            'knowledge_base_size': len(self.knowledge_base),
-            'learning_history_length': len(self.learning_history),
-            'model_summary': str(self.model.summary())
-        } 
+        # 返回标量损失值
+        return float(loss.numpy())  # 现在 loss 是一个标量

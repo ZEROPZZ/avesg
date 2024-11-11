@@ -1,74 +1,134 @@
+# 在最前面添加这些调试代码
+print("=== 程序开始执行 ===")
+print("正在导入模块...")
+
+# 您原有的所有 import 语句
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # 禁用 TensorFlow 警告
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # 禁用 oneDNN 消息
+import numpy as np
 import time
-from learning_robot import AutonomousLearningRobot # type: ignore
-from self_monitoring import SelfMonitoring # type: ignore
-from self_repair import SelfRepair # type: ignore
-from nlp_module import NaturalLanguageUnderstanding # type: ignore
-from voice_interface import VoiceInterface # type: ignore
-from pdf_reader import PDFReader # type: ignore
+import logging
+from typing import Dict, Optional, Any  # 添加这行
+from learning_robot import AutonomousLearningRobot
+
+# 只在需要时导入
+# from voice_interface import VoiceInterface  # 暂时注释掉
+
+class LearningMonitor:
+    """学习监控器"""
+    def __init__(self):
+        self.metrics = {}
+        self.start_time = time.time()
+        
+    def update_metrics(self, new_metrics: Dict): # type: ignore
+        """更新监控指标"""
+        self.metrics.update(new_metrics)
+        
+    def get_metrics(self) -> Dict: # type: ignore
+        """获取监控指标"""
+        return self.metrics
+
+class SelfRepair:
+    """自我修复系统"""
+    def __init__(self):
+        self.error_count = 0
+        self.repair_history = []
+        
+    def check_system_health(self):
+        """检查系统健康状态"""
+        return True
+        
+    def repair_if_needed(self):
+        """如果需要则进行修复"""
+        if not self.check_system_health():
+            self.perform_repair()
+            
+    def perform_repair(self):
+        """执行修复操作"""
+        pass
+
+class NaturalLanguageUnderstanding:
+    """自然语言理解系统"""
+    def __init__(self):
+        self.initialized = True
+    
+    def process_text(self, text: str) -> Dict: # type: ignore
+        """处理文本输入"""
+        return {"status": "processed", "text": text}
 
 class RealTimeLearningSystem:
     def __init__(self):
-        self.robot = AutonomousLearningRobot(state_space=10, action_space=4)
-        self.monitor = SelfMonitoring()
-        self.repair = SelfRepair()
-        self.nlp = NaturalLanguageUnderstanding()
-        self.voice = VoiceInterface()
-        self.pdf_reader = PDFReader()
-
-    def fetch_data_stream(self):
         try:
-            response = requests.get("https://anypoint.mulesoft.com/git/45795a13-4a5c-4aa2-82d8-4a3d824eae9e/ed4b9b0a-0320-4fbd-a244-91243411d3af")  # type: ignore # 示例地址
-            return response.json()
-        except requests.exceptions.RequestException as e: # type: ignore
-            print(f"Error fetching data: {e}")
-            return None
+            print("初始化实时学习系统...")
+            print("- 创建机器人...")
+            self.robot = AutonomousLearningRobot(state_space=10, action_space=4)
+            print("- 创建监控器...")
+            self.monitor = LearningMonitor()
+            print("- 创建修复系统...")
+            self.repair = SelfRepair()
+            print("- 创建NLP系统...")
+            self.nlp = NaturalLanguageUnderstanding()
+            
+            # 语音接口相关
+            self.voice = None
+            self.voice_enabled = False
+            
+            print("- 设置日志...")
+            self._setup_logging()
+            print("系统初始化完成")
+        except Exception as e:
+            print(f"初始化错误: {str(e)}")
+            raise
 
-    def process_data(self, data):
-        state = data['state']
-        action = data['action']
-        reward = data['reward']
-        return state, action, reward
+    def _setup_logging(self):
+        """设置日志系统"""
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+
+    def enable_voice(self):
+        """启用语音接口"""
+        if not self.voice_enabled:
+            from voice_interface import VoiceInterface  # 仅在需要时导入
+            self.voice = VoiceInterface()
+            self.voice_enabled = True
+            print("语音接口已启用")
+
+    def disable_voice(self):
+        """禁用语音接口"""
+        if self.voice_enabled:
+            print("禁用语音接口...")
+            self.voice = None
+            self.voice_enabled = False
+            return True
+        return False
 
     def run(self):
-        while True:
-            data = self.fetch_data_stream()
-            if data:
-                state, action, reward = self.process_data(data)
-
-                # 存储经验
-                self.robot.memory.store((state, action, reward))
-
-                # 学习与决策
-                next_state = self.robot.choose_action(state)
-                self.robot.learn(state, action, reward, next_state)
-                self.robot.update_exploration()
-
-                # 记录性能
-                self.monitor.record_performance(reward)
-
-                # 自我修复和更新
-                self.repair.check_for_updates()
-
-                # 自我监控诊断
-                diagnosis = self.monitor.diagnose()
-                print(diagnosis)
-
-                # 语音交互
-                user_input = self.voice.recognize_speech()
-                if user_input:
-                    intent, entities = self.nlp.understand(user_input)
-                    response = f"Intent recognized: {intent}, Entities: {entities}"
-                    self.voice.speak(response)
-
-                # 读取PDF文件
-                pdf_text = self.pdf_reader.read_pdf("example.pdf")  # 请确保此PDF文件在相同目录下
-                print(f"PDF Content: {pdf_text}")
-
-            time.sleep(1)  # 控制循环频率
+        """运行系统"""
+        try:
+            print("系统开始运行...")
+            # 主要学习逻辑
+            while True:
+                # 系统主循环
+                time.sleep(1)  # 防止CPU占用过高
+                
+        except KeyboardInterrupt:
+            print("\n系统收到停止信号，正在关闭...")
+        except Exception as e:
+            print(f"运行错误: {str(e)}")
+            raise
 
 if __name__ == "__main__":
-    learning_system = RealTimeLearningSystem()
-    learning_system.run()
+    try:
+        print("=== 启动 AI 学习系统 ===")
+        learning_system = RealTimeLearningSystem()
+        learning_system.run()
+    except Exception as e:
+        print(f"系统启动错误: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 from models.real_time_voice import VoiceProcessor
 from speech.speech_synthesis import SpeechSynthesizer
@@ -80,7 +140,7 @@ class VoiceInterface:
         self.synthesizer = SpeechSynthesizer()
         
     def initialize_voice_system(self):
-        """初始化语音系统"""
+        """初��化语系统"""
         self.synthesizer.configure_voice(
             speed=VoiceConfig.DEFAULT_SPEED,
             volume=VoiceConfig.DEFAULT_VOLUME
@@ -101,7 +161,7 @@ if __name__ == "__main__":
     voice_interface = VoiceInterface()
     voice_interface.run_voice_interface()
 
-    from utils.self_healing import SelfHealing
+from utils.self_healing import SelfHealing
 from utils.error_handling import ErrorHandler
 
 class SystemManager:
@@ -141,7 +201,7 @@ if __name__ == "__main__":
     finally:
         system_manager.shutdown_system()
 
-        from monitoring.system_monitor import SystemMonitor
+from monitoring.system_monitor import SystemMonitor
 from monitoring.alerting_system import AlertSystem
 
 class MonitoringManager:
@@ -191,7 +251,7 @@ if __name__ == "__main__":
     finally:
         monitoring_manager.stop_monitoring()
 
-        from models.autonomous_learning.learning_core import AutonomousLearner
+from models.autonomous_learning.learning_core import AutonomousLearner
 from models.autonomous_learning.reinforcement_learning import ReinforcementLearner
 from models.autonomous_learning.adaptive_learning import AdaptiveLearner
 
@@ -202,7 +262,7 @@ class LearningSystem:
         self.adaptive_learner = AdaptiveLearner()
         
     def start_learning(self):
-        """启动学习系统"""
+        """启动学���系统"""
         try:
             # 初始化学习组件
             self._initialize_learning_components()
@@ -301,7 +361,7 @@ class MemorySystem:
     # 维护系统
     memory_system.maintain_system()
 
-    from models.nlu.language_manager import LanguageManager
+from models.nlu.language_manager import LanguageManager
 
 class LanguageSystem:
     def __init__(self):
@@ -328,7 +388,7 @@ if __name__ == "__main__":
     print(f"Input: {text}")
     print(f"Response: {response}")
 
-    from api.core.api_manager import APIManager
+from api.core.api_manager import APIManager
 from api.routes.api_routes import APIRoutes
 from core.system_manager import SystemManager
 import asyncio
@@ -341,7 +401,7 @@ class MainSystem:
         self.api_manager = APIManager()
         self.api_routes = APIRoutes(self.system_manager)
         
-        # 注册路由
+        # 注册由
         self.api_manager.app.include_router(self.api_routes.router)
         
         # 注册信号处理
@@ -406,9 +466,3 @@ class MainSystem:
         except Exception as e:
             print(f"Cleanup failed: {str(e)}")
             raise
-
-if __name__ == "__main__":
-    system = MainSystem()
-    system.start()
-
-    
