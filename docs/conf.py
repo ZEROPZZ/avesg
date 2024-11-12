@@ -33,7 +33,7 @@ description = 'AVESG: A Self-Learning Robot Project'
 
 # -- Theme configuration ----------------------------------------------------
 
-html_theme ='sphinx_rtd_theme'
+html_theme =html_theme = 'alabaster'
 html_theme_options = {
   'style_nav_header_background': '#333',
     'collapse_navigation': True,
