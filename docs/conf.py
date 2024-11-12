@@ -56,6 +56,8 @@ mathjax_path = 'https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js'
 
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+html_theme_path = ['_themes']
+
 # -- Python-specific configuration --------------------------------------------
 
 primary_domain = 'py'
