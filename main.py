@@ -10,8 +10,8 @@ import numpy as np
 import time
 import logging
 from typing import Dict, Optional, Any  # 添加这行
-from learning_robot import AutonomousLearningRobot
-
+import tensorflow as tf # type: ignore
+from models.autonomous_learning.learning_robot import AutonomousLearningRobot # type: ignore
 # 只在需要时导入
 # from voice_interface import VoiceInterface  # 暂时注释掉
 
@@ -59,10 +59,13 @@ class NaturalLanguageUnderstanding:
 
 class RealTimeLearningSystem:
     def __init__(self):
+        print("初始化实时学习系统...")
         try:
-            print("初始化实时学习系统...")
             print("- 创建机器人...")
-            self.robot = AutonomousLearningRobot(state_space=10, action_space=4)
+            self.robot = AutonomousLearningRobot(
+                state_space=10,  # 状态空间大小
+                action_space=4   # 动作空间大小
+            )
             print("- 创建监控器...")
             self.monitor = LearningMonitor()
             print("- 创建修复系统...")
@@ -140,7 +143,7 @@ class VoiceInterface:
         self.synthesizer = SpeechSynthesizer()
         
     def initialize_voice_system(self):
-        """初��化语系统"""
+        """初化语系统"""
         self.synthesizer.configure_voice(
             speed=VoiceConfig.DEFAULT_SPEED,
             volume=VoiceConfig.DEFAULT_VOLUME
@@ -262,7 +265,7 @@ class LearningSystem:
         self.adaptive_learner = AdaptiveLearner()
         
     def start_learning(self):
-        """启动学���系统"""
+        """启动学系统"""
         try:
             # 初始化学习组件
             self._initialize_learning_components()
@@ -466,3 +469,20 @@ class MainSystem:
         except Exception as e:
             print(f"Cleanup failed: {str(e)}")
             raise
+
+def main():
+    # ... 现有代码 ...
+    
+    # 启动学习过程
+    print("\n=== 启动自主学习系统 ===")
+    learning_system.start_learning()
+    
+    # 显示学习结果
+    print("\n=== 学习结果 ===")
+    print("1. 模型性能指标:")
+    print("   - 准确率:", accuracy) # type: ignore
+    print("   - 损失值:", loss) # type: ignore
+    
+    print("\n2. 学习到的新能力:")
+    print("   - 新增特征:", new_features) # type: ignore
+    print("   - 优化策略:", optimized_strategies) # type: ignore
